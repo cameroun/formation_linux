@@ -94,7 +94,6 @@ que constatons-nous ?
 *** Les process sont des fichiers
 #+BEGIN_SRC bash
     echo $$
-    12329
     ls -la /proc|grep $$
     dr-xr-xr-x   6 blabla intapp
     ls -la /proc/$$
