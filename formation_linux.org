@@ -1,0 +1,337 @@
+#+LANGUAGE: fr
+#+AUTHOR: Nicolas Bessi
+#+OPTIONS: toc:4
+#+OPTIONS: p:DEADLINE
+#+OPTIONS: H:5
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
+
+#+HTML_HEAD: <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+#+HTML_HEAD: <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
+#+LaTeX_CLASS: doc_vaud
+
+#+TITLE: Formation Linux
+* Crédits et licence
+  - Inspiré de la structure de la présentation en anglais de Dan North
+  - Basé sur les échelles de la LPI pour la certification "essential"
+  - Licence [[http://creativecommons.org/licenses/by-nc-sa/3.0/fr/legalcode][Creative commons 3]]:Attribution - Pas d’Utilisation Commerciale - Partage dans les Mêmes Conditions
+
+* Linux Quesaquo ?
+  - OS [[https://fr.wikipedia.org/wiki/Type_Unix][de Type Unix]] libre sous licence GPL
+  - Consitué en Majorité d'outils [[https://www.gnu.org/home.fr.html][GNU]]
+  - Avec un Kernel Linux Modulaire (Créé par Linus Torvald en 1991)
+  - Distribution Gnu/Linux
+  - Basé sur la norme POSIX
+  - RedHat est une distribution Gnu/Linux maintenue par une société commerciale
+* Le Pouvoir de Linux
+** Linux est basé sur un modèle simple
+   - Le shell est l'interface à tout
+   - Tout est fichier
+   - Tout ce qui "run" est *Process*
+   - Chaque fichier est du texte ou de la donnée
+   - Chaque commande ne fait qu'une chose, mais la fait bien
+   - Les pipes permettent la composition
+** Le Shell
+   - Interpréteur de commande
+   - Grandes implémentations
+     * SH
+     * C Shell (pas un succès)
+     * BASH
+     * KSH
+     * ...
+     * ZSH (mon chouchou)
+   - Appeler par [[https://fr.wikipedia.org/wiki/%C3%89mulateur_de_terminal][un émulateur de terminal]]
+*** Anatomie d'une commande
+    ~ls -la --size  --time-style=long-iso . /dev/~
+    - ~ls~ le nom de la commande, qui est généralement le nom du binaire inclut dans les chemins du terminal
+    - ~-la~ Arguments optionels ~l~ signigfie list ~a~ tout
+    - ~--~ Arguments explicite
+*** Man est ton ami
+   ~man ls~
+   La documentation dans les Linux/Unix est exceptionnel.
+   la preuve:
+   ~man man~
+
+   les section de man
+
+    1. Programmes exécutables ou commandes de l'interpréteur de commandes (shell) ;
+    2. Appels système (Fonctions fournies par le noyau) ;
+    3. Appels de bibliothèque (fonctions fournies par des bibliothèques) ;
+    4. Fichiers spéciaux (situés généralement dans /dev) ;
+    5. Formats des fichiers et conventions (Par exemple /etc/passwd) ;
+    6. Jeux ;
+    7. Divers (y compris les macropaquets et les conventions). Par exemple, man(7), groff(7) ;
+    8. Commandes de gestion du système (généralement réservées au superutilisateur) ;
+    9. Interface du noyau Linux.
+
+   Pour connaître les sections disponible, utiliser la commande ~whatis~
+   Pour utiliser un mots clef ~man -k mon_mot~
+   Pour naviguer la doc la commande ~info~ est ce qu'il vous faut
+
+** Tout est fichier
+   [[http://www.tldp.org/LDP/intro-linux/html/sect_03_01.html][Référence]]
+*** Un fichier est un fichier
+    logique :P
+*** Les péripheriques sont des fichiers
+#+BEGIN_SRC bash
+   ls -la /dev/sda*
+   brw-r----- 1 root disk 8, 0 Apr 27 21:06 /dev/sda
+   brw-r----- 1 root disk 8, 1 Apr 27 19:06 /dev/sda1
+   brw-r----- 1 root disk 8, 2 Apr 27 21:06 /dev/sda2
+#+END_SRC
+
+La première lettre indique le type de fichier
+    * -	Regular file
+    * d	Directory
+    * l	Link
+    * c	Special file
+    * s	Socket
+    * p	Named pipe
+    * b	Block device
+que constatons-nous ?
+*** Les process sont des fichiers
+#+BEGIN_SRC bash
+    echo $$
+    ls -la /proc|grep $$
+    dr-xr-xr-x   6 blabla intapp
+    ls -la /proc/$$
+    cat /proc/$$/cmdline
+#+END_SRC
+
+*** Les sorties de commandes sont des fichiers
+#+BEGIN_SRC bash
+  less -f <(ls -la)
+#+END_SRC
+
+** Tout ce qui tourne est process
+   - Tout processus à un parent
+   - Sauf le processus 0 pour les dirigez tous
+   - Quand un parent meurt il tue tous ses enfants (dur...)
+   - Pourant parfois il y en a qui veulent pas mourrir et devienent des Zombies, et devinez quoi; les process sont des fichier
+#+BEGIN_SRC bash
+pstree
+#+END_SRC
+
+** Chaque fichier est du texte ou de la donnée
+   Gnu/linux est un maître dans la gestion du texte, tout le reste est donnée
+
+** Chaque commande ne fait qu'une chose mais la fait bien
+   Chaque commande est très découplée cela permet une bonne séparation des préocupation,
+   ce qui permet une grande composition de commandes
+
+** Les pipe permettent la composition
+   la compostion de:
+   * tous avec n'importe quoi
+   * de tous ce qui sait lire ou écrire
+
+  Cela est representé par les i/o:
+  1. stdin
+  2. stdout
+  3. stderr
+
+ #+BEGIN_SRC bash
+ wget -q -O - "http://www.vd.ch/actualite/communiques/communiques-de-presse/?type=100"|sed 's/<[^>]*>//g'|fmt -c -w 80
+ #+END_SRC
+* Linux excelle dans trois domaines
+** Linux sait trouver des choses
+#+BEGIN_SRC bash
+  # Recher par nom et type
+  find . -type d -name xxx
+  # glob
+  print -l **/*.org
+#+END_SRC
+*** Rechercher par contenu
+**** Exercice
+   - L'aiguille dans la botte de foin avec grep
+**** Solution
+#+BEGIN_SRC bash
+ grep -rni pattern file
+#+END_SRC
+**** la puissance des regexp
+     Pour tirer plein avantage des commandes il faut avoir une bonne maitrise des regexp
+*****  Exercice
+      Trouvez tout les mots de la langue francaise qui contienne les voyelles (sans accents) dans l'ordre
+***** Solution
+    #+BEGIN_SRC bash
+    wget -q -O - http://www.pallier.org/ressources/dicofr/liste.de.mots.francais.frgut.txt|grep -i 'a.*e.*i.*o.*u'
+    #+END_SRC
+**** Pour l'histoire
+     grep -> global regular expression print -> g/re/p
+
+** Linux sait transformer des choses
+*** Exercice
+   - Transformer la paille en or comme le Roi Midas
+*** Solution
+    #+BEGIN_SRC bash
+    sed 's/paille/or/g' botte.txt > botte_de_midas.txt
+    #+END_SRC
+
+* les opérations courantes
+** le minimum vital
+    - cd -> change dir -- se déplacer
+    - ls -> list -- liste le contenu d'un dossier
+    - touch -> touch -- touche/crée un fichier
+    - mkdir -> make directory -- crée un dossier
+    - less -> less -- lit un fichier
+    - cat -> concatenate -- lit les fichiers passés, les concatenne et les renvoies en sortie
+    - rm -> remove -- supprime des fichiers/dossiers
+    - mv -> move -- deplace les fichiers
+    - cp -> copy -- copy les fichiers
+    - ln -> link -- creation de liens
+    - > redirection
+    - < entrée
+    - ctrl-c ou ctrl-d sont utilisez pour les interruptions
+** les descipteurs de fichiers spéciaux
+    - ~.~ le dossier courant
+    - ~..~ le dossier parent
+    - ~ le dossier HOME ~echo $HOME~
+** la compression decompression
+*** les commande de compression
+    * ~zip~
+    * ~gzip~
+    * ~bzip~
+    * ~xz~
+  Sont des commandes de compression basé sur des algorytmes différents.
+  Toutes ces commandes proposent en standard des utilitaires:
+    *zcat
+    *gzcat
+    *bzcat
+    *unzip
+    *ungzip
+    ...
+*** Les archives
+    1. La notion d'archive est particulière.
+    2. Ensemble de dossiers/sous dossiers/fichier mis concatenez dans un seul fichier.
+    3. La notion des archives est détachées de celle de la compression.
+
+    La principale commande est ~tar~ pour créer ou expandre des archives
+** Action de base sur ficher ou "text stream"
+
+    - cut -> cut -- découpe un fichier
+    - emacs -> executable macros -- The text processor to rule them all
+    - expand -> expand -- remplace les tabs par des espaces
+    - file -> file -- donne les informations sur un fichier
+    - fmt -> format -- formate un fichier
+    - head -> head -- montre le début d'un fichier
+    - nl -> number line -- numérote les lignes (nb lignes + textes)
+    - od -> octal dump -- renvoie le fichiers convertis en octal
+    - paste -> paste -- merge les lignes de n fichiers
+    - pr -> printing -- prepare stream for printing
+    - sed -> streamed editor -- edit content of stream and file
+    - sort -> sort -- trie un stream ou fichiers
+    - split -> split -- découpe des fichiers
+    - tail -> tail -- montre la fin d'un fichier
+    - tr -> translate -- rechèrche et remplace avancé
+    - unexpand -> unexpand -- remplace les espaces par des tabs
+    - uniq -> uniq -- suprime les doublons
+    - vi -> vi -- éditeur de text modale
+    - wc -> word count -- compte le nombre de mots/lignes dans un fichier
+
+** Gerer les processus
+    - bg -> background -- pose un processus
+    - fg -> forground -- dépose un processus
+    - free -> free -- donne la mémoire libre
+    - fuser -> file user -- done le "process id" qui à ouvert un fichier
+    - jobs -> jobs -- liste les job en sommeil
+    - killall -> kill all -- tue tous les processus qui match une pattern
+    - lsof -> list open files -- liste les fichiers ouverts
+    - nice/renice -> nice -- priorité des processus
+    - pgrep -> proc grep -- grep sur les processus
+    - pkill -> process kill -- tue des processus
+    - ps -> process -- liste les processus
+    - top -> top (htop) -- moniteur des processus
+    - uptime -> uptime -- donne la durée d'éxecution
+** Lister les péripheriques
+    - lsmod -> list modules -- liste les modules du kernel
+    - lspci -> list pci -- liste les ports pci
+    - lsusb -> list usb -- liste les ports usb
+** Information sur les disques
+    - df -> disc filesystem -- information sur l'espace libre sur le file system
+    - du -> disc usage (local) -- Information sur l'espace des dossier
+    - iostat -> I/O statistique -- donnes les vitesse de lecture écriture
+
+** divers
+   - echo -> echo -- renvoie du text
+   - pwd -> path of working directory -- renvoie le chemin sur le dossier courant
+   - pwgen -> password generator -- génère des mots de passe
+* Redirection
+** Sortie standard
+   - ~>~ redirige dans un nouveau fichier ou stream
+   - ~>>~ redirige à la fin d'un fichier
+** Sortie d'erreur
+   - ~2>~ redirige la sortie d'erreur
+   - ~2>>~ redirige la sortie d'erreur à la fin d'un fichier
+** Fusion des sorties
+   - ~2>&1~
+
+* les permissions
+** les accès
+  Il y a trois niveaux de permissions pour les fichiers
+  - r -> lire
+  - w -> écrire
+  - e -> executer
+
+  Il y a trois niveaux de permissions pour les dossiers
+  - r -> lire
+  - w -> Modifier
+  - x -> lister entrer
+
+** les groupes
+  Chaque fichier est lié à 3 groupes
+  - u -> utilisateur
+  - g -> groupe
+  - o -> autre
+
+** Modifier les permissions
+  - la commande ~chown~ modifie le propriétaire
+  - la commande ~chmod~ modifie les permissions
+  - la commande ~chgrp~ modifie le groupe
+
+  Je recommende la lecture de [[http://www.math-linux.com/linux-2/tutoriels-linux/article/droit-et-permission-d-acces-aux-fichiers][cet article]]
+** Sudo
+   Super user do est une commande qui permet d'exectuer
+   des commandes en utilisant un autre rôle.
+*** Rôles
+   ~sudo ls~
+   par défaut le role est ~root~
+   mais l'on peux modifier le rôle avec ~--user ou --login~
+   si l'on utilise --login les variable d'environnement et le ~.profile~ sont chargé.
+
+*** Fichier sudoers
+    La commande sudoedit permet de définir un périmètre limiter d'utilisation pour la commande ~sudo~
+    #+BEGIN_SRC text
+    my_user = (role) command 1, command 2, or ALL
+
+    #+END_SRC
+
+    plus de détail avec ~man sudoedit~
+* les bonnes pratiques de déployment RedHat
+!! Ceci est un trés court survol pour discuter avec les archi.
+Chaque topic pourrait fair l'objet de plusieurs jour de présentations.
+
+** Ne vous laissez pas avoir
+En intégration ne vous laissez pas enfiler des commandes à lancer à la chaîne.
+Un script est le minimum vital.
+
+** RPM
+ - Redhat package management
+ - Si vous avez un livrable qui ne cadre pas avec l'archi java, cela est la meilleur solution
+ - un meta paquet permet de tirer toutes les dépendances et configurations
+ - gère le pre/post/install/succes/ etc. ... tous est là
+
+** Pupett ou autre gestionnaire de config
+ - Configuration répétable
+ - Garanti un état de machine, pas de diff entre environements
+ - Utile pour des setup complexes multi composants (DB, Mom, application, interfaces, etc)
+ - Parfait outils pour gérer des RPM
+ - Plateforme agnostique
+
+* War - Maven
+  On ne va pas parler développement
+  - Se marie parfairement avec les autres outils
+  - Gère les micro services
+  - Une vraie usine à gase mais très puissante
+  - Peux ammener un tas soucis si mal utiliser
+  - Permet la superssion de toutes actions manuelle
