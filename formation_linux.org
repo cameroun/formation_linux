@@ -107,7 +107,7 @@ que constatons-nous ?
 
 ** Tout ce qui tourne est process
    - Tout processus à un parent
-   - Sauf le processus 0 pour les dirigez tous
+   - Sauf le processus inital (0 ou 1) pour les diriger tous
    - Quand un parent meurt il tue tous ses enfants (dur...)
    - Pourant parfois il y en a qui veulent pas mourrir et devienent des Zombies, et devinez quoi; les process sont des fichier
 #+BEGIN_SRC bash
